@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"math"
 
 	"github.com/pkg/errors"
 )
@@ -20,7 +21,7 @@ func DecryptAESCBCunpad(src, key, iv []byte) ([]byte, error) {
 	if err != nil {
 		return dst, err
 	}
-	return Pkcs7Unpad(dst, len(key))
+	return Pkcs7Unpad(dst, aes.BlockSize)
 }
 
 // DecryptAESCBC will decrypt your data.
@@ -39,7 +40,7 @@ func DecryptAESCBC(src, key, iv []byte) (dst []byte, err error) {
 
 // EncryptAESCBCpad will pad your data and encrypt them.
 func EncryptAESCBCpad(src, key, iv []byte) ([]byte, error) {
-	src, err := Pkcs7Pad(src, len(key))
+	src, err := Pkcs7Pad(src, aes.BlockSize)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +64,7 @@ func EncryptAESCBC(src, key, iv []byte) ([]byte, error) {
 
 // Pkcs7Pad will pad your data.
 func Pkcs7Pad(data []byte, blocklen int) ([]byte, error) {
-	if blocklen <= 0 {
+	if blocklen <= 0 || blocklen > math.MaxUint8 {
 		return nil, errors.Wrapf(ErrInvalidInput, "invalid blocklen %d", blocklen)
 	}
 	padlen := 1
@@ -77,7 +78,7 @@ func Pkcs7Pad(data []byte, blocklen int) ([]byte, error) {
 
 // Pkcs7Unpad will trim the padding from your data.
 func Pkcs7Unpad(data []byte, blocklen int) ([]byte, error) {
-	if blocklen <= 0 {
+	if blocklen <= 0 || blocklen > math.MaxUint8 {
 		return nil, errors.Wrapf(ErrInvalidInput, "invalid blocklen %d", blocklen)
 	}
 	if len(data)%blocklen != 0 || len(data) == 0 {
