@@ -2,3 +2,27 @@
 
 Simple but handy wrappers around AES crypto methods,
 hiding the boilerplate code around `crypto/aes` and `crypto/cipher`
+
+## Example
+
+```
+	var (
+		data = "some sencitive data has to be protected with AES"
+		key  = "0123456789ABCDEF"
+		iv   = "qwertyuiodfghjkm"
+	)
+
+	encData, err := aescrypt.EncryptAESCBCPadded(data, key, iv)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	decData, err := aescrypt.DecryptAESCBCPadded(encData, key, iv)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(data, decData) {
+		t.Error("decrypted data is not equal to original")
+	}
+```
