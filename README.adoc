@@ -7,9 +7,9 @@ hiding the boilerplate code around `crypto/aes` and `crypto/cipher`
 
 ```
 	var (
-		data = "some sencitive data has to be protected with AES"
-		key  = "0123456789ABCDEF"
-		iv   = "qwertyuiodfghjkm"
+		data = []byte("some sencitive data has to be protected with AES")
+		key  = []byte("0123456789ABCDEF")
+		iv   = []byte("qwertyuiodfghjkm")
 	)
 
 	encData, err := aescrypt.EncryptAESCBCPadded(data, key, iv)
