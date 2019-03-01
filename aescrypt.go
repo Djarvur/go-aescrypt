@@ -11,12 +11,15 @@ import (
 
 // Errors might be returned. They will be wrapped with stacktrace at least, of course.
 var (
+	// Panic was recovered. Will be wrapped with actual panic message.
+	ErrRecovered = errors.New("recovered")
+
 	// Data provided are invalid. Will be wrapped with actual error message.
 	ErrInvalidInput = errors.New("invalid input")
 )
 
-// DecryptAESCBCunpad will decrypt your data and trim the padding.
-func DecryptAESCBCunpad(src, key, iv []byte) ([]byte, error) {
+// DecryptAESCBCPadded will decrypt your data and trim the padding.
+func DecryptAESCBCPadded(src, key, iv []byte) ([]byte, error) {
 	dst, err := DecryptAESCBC(src, key, iv)
 	if err != nil {
 		return dst, err
@@ -26,6 +29,8 @@ func DecryptAESCBCunpad(src, key, iv []byte) ([]byte, error) {
 
 // DecryptAESCBC will decrypt your data.
 func DecryptAESCBC(src, key, iv []byte) (dst []byte, err error) {
+	defer catch(&err)
+
 	dst = make([]byte, len(src))
 
 	cip, err := aes.NewCipher(key)
@@ -38,8 +43,8 @@ func DecryptAESCBC(src, key, iv []byte) (dst []byte, err error) {
 	return dst, nil
 }
 
-// EncryptAESCBCpad will pad your data and encrypt them.
-func EncryptAESCBCpad(src, key, iv []byte) ([]byte, error) {
+// EncryptAESCBCPadded will pad your data and encrypt them.
+func EncryptAESCBCPadded(src, key, iv []byte) ([]byte, error) {
 	src, err := Pkcs7Pad(src, aes.BlockSize)
 	if err != nil {
 		return nil, err
@@ -97,4 +102,15 @@ func Pkcs7Unpad(data []byte, blocklen int) ([]byte, error) {
 	}
 
 	return data[:len(data)-padlen], nil
+}
+
+func catch(err *error) {
+	e := recover()
+	if e != nil {
+		if errInternal, ok := e.(error); ok {
+			*err = errors.WithStack(errInternal)
+		} else {
+			*err = errors.Wrapf(ErrRecovered, "%v", e)
+		}
+	}
 }
