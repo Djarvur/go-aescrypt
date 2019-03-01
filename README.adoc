@@ -1,0 +1,4 @@
+# go-aescrypt image:https://godoc.org/github.com/Djarvur/go-aescrypt?status.svg["GoDoc",link="http://godoc.org/github.com/Djarvur/go-aescrypt"] image:https://travis-ci.org/Djarvur/go-aescrypt.svg["Build Status",link="https://travis-ci.org/Djarvur/go-aescrypt"] image:https://coveralls.io/repos/Djarvur/go-aescrypt/badge.svg?branch=master&service=github["Coverage Status",link="https://coveralls.io/github/Djarvur/go-aescrypt?branch=master"]
+
+Simple but handy wrappers around AES crypto methods,
+hiding the boilerplate code around `crypto/aes` and `crypto/cipher`
