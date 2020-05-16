@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"errors"
+	"fmt"
 	"math"
-
-	"github.com/pkg/errors"
 )
 
 // Errors might be returned. They will be wrapped with stacktrace at least, of course.
@@ -35,7 +35,7 @@ func DecryptAESCBC(src, key, iv []byte) (dst []byte, err error) {
 
 	cip, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 
 	cipher.NewCBCDecrypter(cip, iv).CryptBlocks(dst, src)
@@ -58,7 +58,7 @@ func EncryptAESCBC(src, key, iv []byte) ([]byte, error) {
 
 	cip, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 
 	c := cipher.NewCBCEncrypter(cip, iv)
@@ -70,7 +70,7 @@ func EncryptAESCBC(src, key, iv []byte) ([]byte, error) {
 // Pkcs7Pad will pad your data.
 func Pkcs7Pad(data []byte, blocklen int) ([]byte, error) {
 	if blocklen <= 0 || blocklen > math.MaxUint8 {
-		return nil, errors.Wrapf(ErrInvalidInput, "invalid blocklen %d", blocklen)
+		return nil, fmt.Errorf("invalid blocklen %d: %w", blocklen, ErrInvalidInput)
 	}
 	padlen := 1
 	for ((len(data) + padlen) % blocklen) != 0 {
@@ -84,20 +84,20 @@ func Pkcs7Pad(data []byte, blocklen int) ([]byte, error) {
 // Pkcs7Unpad will trim the padding from your data.
 func Pkcs7Unpad(data []byte, blocklen int) ([]byte, error) {
 	if blocklen <= 0 || blocklen > math.MaxUint8 {
-		return nil, errors.Wrapf(ErrInvalidInput, "invalid blocklen %d", blocklen)
+		return nil, fmt.Errorf("invalid blocklen %d: %w", blocklen, ErrInvalidInput)
 	}
 	if len(data)%blocklen != 0 || len(data) == 0 {
-		return nil, errors.Wrapf(ErrInvalidInput, "invalid data len %d", len(data))
+		return nil, fmt.Errorf("invalid data len %d: %w", len(data), ErrInvalidInput)
 	}
 	padlen := int(data[len(data)-1])
 	if padlen > blocklen || padlen == 0 {
-		return nil, errors.Wrapf(ErrInvalidInput, "invalid padding for %d bytes: %d > %d or %d == 0", len(data), padlen, blocklen, padlen)
+		return nil, fmt.Errorf("invalid padding for %d bytes: %d > %d or %d == 0: %w", len(data), padlen, blocklen, padlen, ErrInvalidInput)
 	}
 	// check padding
 	pad := data[len(data)-padlen:]
 	for i := 0; i < padlen; i++ {
 		if pad[i] != byte(padlen) {
-			return nil, errors.Wrapf(ErrInvalidInput, "invalid padding")
+			return nil, fmt.Errorf("invalid padding: %w", ErrInvalidInput)
 		}
 	}
 
@@ -108,9 +108,9 @@ func catch(err *error) {
 	e := recover()
 	if e != nil {
 		if errInternal, ok := e.(error); ok {
-			*err = errors.WithStack(errInternal)
+			*err = errInternal
 		} else {
-			*err = errors.Wrapf(ErrRecovered, "%v", e)
+			*err = fmt.Errorf("%v: %w", e, ErrRecovered)
 		}
 	}
 }
