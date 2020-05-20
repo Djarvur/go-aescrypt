@@ -1,3 +1,4 @@
+// Package aescrypt Simple but handy wrappers around AES crypto methods
 package aescrypt
 
 import (
@@ -24,6 +25,7 @@ func DecryptAESCBCPadded(src, key, iv []byte) ([]byte, error) {
 	if err != nil {
 		return dst, err
 	}
+
 	return Pkcs7Unpad(dst, aes.BlockSize)
 }
 
@@ -49,6 +51,7 @@ func EncryptAESCBCPadded(src, key, iv []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return EncryptAESCBC(src, key, iv)
 }
 
@@ -72,12 +75,15 @@ func Pkcs7Pad(data []byte, blocklen int) ([]byte, error) {
 	if blocklen <= 0 || blocklen > math.MaxUint8 {
 		return nil, fmt.Errorf("invalid blocklen %d: %w", blocklen, ErrInvalidInput)
 	}
+
 	padlen := 1
+
 	for ((len(data) + padlen) % blocklen) != 0 {
 		padlen++
 	}
 
 	pad := bytes.Repeat([]byte{byte(padlen)}, padlen)
+
 	return append(data, pad...), nil
 }
 
@@ -86,13 +92,16 @@ func Pkcs7Unpad(data []byte, blocklen int) ([]byte, error) {
 	if blocklen <= 0 || blocklen > math.MaxUint8 {
 		return nil, fmt.Errorf("invalid blocklen %d: %w", blocklen, ErrInvalidInput)
 	}
+
 	if len(data)%blocklen != 0 || len(data) == 0 {
 		return nil, fmt.Errorf("invalid data len %d: %w", len(data), ErrInvalidInput)
 	}
+
 	padlen := int(data[len(data)-1])
 	if padlen > blocklen || padlen == 0 {
 		return nil, fmt.Errorf("invalid padding for %d bytes: %d > %d or %d == 0: %w", len(data), padlen, blocklen, padlen, ErrInvalidInput)
 	}
+
 	// check padding
 	pad := data[len(data)-padlen:]
 	for i := 0; i < padlen; i++ {
